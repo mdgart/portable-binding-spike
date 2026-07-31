@@ -29,11 +29,21 @@ Public interface review found compatible hooks:
   in a separate permission-controlled job. The verifier and GitHub write are
   executed in one process in that job.
 
+Compiled integration evidence (2026-07-31):
+
+- `gh-aw` v0.83.4 accepted `.github/workflows/portable-binding-demo.md` with
+  no validation errors.
+- Compilation produced `portable-binding-demo.lock.yml`, including the imported
+  `portable-binding` safe-output job, the restricted
+  `PORTABLE_BINDING_PUBLIC_KEY` secret, and the final
+  `github_safe_output_handler.py` invocation.
+- The safe-update approval covers that one expected verification key; action
+  and container dependencies are pinned in the generated manifest.
+
 Not yet demonstrated live:
 
 - A running Faramesh daemon permitting the fixture and invoking the governed
   callable.
-- `gh aw compile` of the included workflow fixture.
 - A credentialed GitHub Agentic Workflow creating the bound issue.
 
 The local suite may prove the portable binding contract and catch adapter
@@ -46,4 +56,3 @@ The binding design has not failed. No certificate-semantic fork or
 gateway-specific rule has been required. The result remains provisional until
 the two credentialed platform runs complete or the 2026-08-06 hard stop is
 reached.
-
