@@ -37,8 +37,15 @@ class GitHubSafeOutputsAdapter:
             document = json.loads(agent_output)
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise ContractError("Safe Outputs buffer is not valid JSON") from error
-        if not isinstance(document, dict) or set(document) != {"items"}:
-            raise ContractError("Safe Outputs buffer must contain only items")
+        if not isinstance(document, dict):
+            raise ContractError("Safe Outputs buffer must be an object")
+        if "items" not in document or not set(document).issubset({"items", "errors"}):
+            raise ContractError("Safe Outputs buffer has unexpected fields")
+        errors = document.get("errors", [])
+        if not isinstance(errors, list):
+            raise ContractError("Safe Outputs errors must be an array")
+        if errors:
+            raise ContractError("Safe Outputs buffer contains errors")
         items = document["items"]
         if not isinstance(items, list):
             raise ContractError("Safe Outputs items must be an array")

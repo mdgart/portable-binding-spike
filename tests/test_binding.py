@@ -91,7 +91,8 @@ class BindingTestCase(unittest.TestCase):
                         ),
                         "certificate_json": json.dumps(certificate.as_dict()),
                     }
-                ]
+                ],
+                "errors": [],
             }
         ).encode()
 
@@ -279,6 +280,29 @@ class BindingTestCase(unittest.TestCase):
                 MemoryReplayLedger(),
                 self.scope,
             ).execute(ambiguous, RecordingExecutor())
+
+    def test_safe_output_accepts_gh_aw_envelope_with_empty_errors(self) -> None:
+        executor = RecordingExecutor()
+        GitHubSafeOutputsAdapter(
+            self.public_key,
+            MemoryReplayLedger(),
+            self.scope,
+        ).execute(self.safe_output(), executor)
+        assert_executed_identity(self.action, executor)
+
+    def test_safe_output_rejects_unknown_envelope_fields(self) -> None:
+        document = json.loads(self.safe_output())
+        document["unbound"] = "must not be ignored"
+        with self.assertRaisesRegex(ContractError, "unexpected fields"):
+            GitHubSafeOutputsAdapter.reconstruct(json.dumps(document).encode())
+
+    def test_safe_output_rejects_malformed_or_nonempty_errors(self) -> None:
+        for errors, message in (("bad", "must be an array"), (["bad"], "contains errors")):
+            with self.subTest(errors=errors):
+                document = json.loads(self.safe_output())
+                document["errors"] = errors
+                with self.assertRaisesRegex(ContractError, message):
+                    GitHubSafeOutputsAdapter.reconstruct(json.dumps(document).encode())
 
     def test_toctou_mutation_of_original_envelope_cannot_change_execution(self) -> None:
         call = self.faramesh_call()
