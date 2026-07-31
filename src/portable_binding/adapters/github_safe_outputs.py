@@ -37,8 +37,17 @@ class GitHubSafeOutputsAdapter:
             document = json.loads(agent_output)
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise ContractError("Safe Outputs buffer is not valid JSON") from error
-        if not isinstance(document, dict) or set(document) != {"items"}:
-            raise ContractError("Safe Outputs buffer must contain only items")
+        if not isinstance(document, dict):
+            raise ContractError("Safe Outputs buffer must be an object")
+        if "items" not in document or not set(document).issubset(
+            {"items", "errors"}
+        ):
+            raise ContractError("Safe Outputs buffer has unexpected fields")
+        errors = document.get("errors", [])
+        if not isinstance(errors, list):
+            raise ContractError("Safe Outputs errors must be an array")
+        if errors:
+            raise ContractError("Safe Outputs buffer contains errors")
         items = document["items"]
         if not isinstance(items, list):
             raise ContractError("Safe Outputs items must be an array")
@@ -50,8 +59,15 @@ class GitHubSafeOutputsAdapter:
         if len(matches) != 1:
             raise ContractError("expected exactly one portable_binding output")
         item = matches[0]
-        if set(item) != {"type", "action_json", "certificate_json"}:
+        if set(item) != {
+            "type",
+            "invocation",
+            "action_json",
+            "certificate_json",
+        }:
             raise ContractError("portable_binding output has unexpected fields")
+        if not isinstance(item["invocation"], str):
+            raise ContractError("Safe Outputs invocation must be a string")
         if not isinstance(item["action_json"], str):
             raise ContractError("Safe Outputs action_json must be a string")
         if not isinstance(item["certificate_json"], str):
@@ -75,6 +91,10 @@ class GitHubSafeOutputsAdapter:
         if not isinstance(certificate_data, dict):
             raise ContractError("Safe Outputs certificate must be an object")
         certificate = BindingCertificate.from_dict(certificate_data)
+        if item["invocation"] != certificate.scope.get("invocation"):
+            raise ContractError(
+                "Safe Outputs invocation does not match signed certificate scope"
+            )
         return action, certificate
 
     def execute(self, agent_output: bytes, executor: ActionExecutor) -> str:
