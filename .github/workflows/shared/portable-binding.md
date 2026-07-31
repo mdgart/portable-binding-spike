@@ -9,6 +9,10 @@ safe-outputs:
         issues: write
         contents: read
       inputs:
+        invocation:
+          description: "Attestor-chosen invocation identifier"
+          required: true
+          type: string
         action_json:
           description: "Platform-neutral action encoded as strict JSON"
           required: true
@@ -29,7 +33,7 @@ safe-outputs:
             PORTABLE_BINDING_PUBLIC_KEY: "${{ secrets.PORTABLE_BINDING_PUBLIC_KEY }}"
             PORTABLE_BINDING_SCOPE: >-
               {"audience":"protected-action-executor",
-              "invocation":"${{ github.run_id }}",
+              "invocation":"${{ inputs.invocation }}",
               "target":"github:${{ github.repository }}"}
           run: python scripts/github_safe_output_handler.py "$GH_AW_AGENT_OUTPUT"
 ---
