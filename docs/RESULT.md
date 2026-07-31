@@ -39,12 +39,23 @@ Compiled integration evidence (2026-07-31):
   `github_safe_output_handler.py` invocation.
 - The safe-update approval covers that one expected verification key; action
   and container dependencies are pinned in the generated manifest.
+- Live-run preparation caught and removed a circular scope dependency:
+  `github.run_id` is unavailable when the certificate is issued before
+  dispatch. Both paths now receive the same attestor-chosen opaque invocation
+  identifier, preserving the platform-neutral certificate meaning.
+- A regression test asserts that the compiled source contract never derives
+  invocation identity from `github.run_id`.
 
 Not yet demonstrated live:
 
 - A running Faramesh daemon permitting the fixture and invoking the governed
   callable.
 - A credentialed GitHub Agentic Workflow creating the bound issue.
+
+GitHub only dispatches a `workflow_dispatch` workflow after the compiled file
+exists on the default branch. The credentialed run therefore begins after the
+draft PR is reviewed and merged; the spike does not change the default branch
+or bypass that platform boundary.
 
 The local suite may prove the portable binding contract and catch adapter
 regressions, but it cannot by itself establish that the public platforms expose
