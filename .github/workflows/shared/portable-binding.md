@@ -18,8 +18,8 @@ safe-outputs:
           required: true
           type: string
       steps:
-        - uses: actions/checkout@v6
-        - uses: actions/setup-python@v6
+        - uses: actions/checkout@v7
+        - uses: actions/setup-python@v7
           with:
             python-version: "3.12"
         - run: python -m pip install .
