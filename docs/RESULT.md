@@ -1,10 +1,10 @@
 # Spike Result
 
-Current status: **PROVISIONAL PASS / LIVE VALIDATION PENDING**
+Current status: **PROVISIONAL PASS / FARAMESH LIVE VALIDATION PENDING**
 
 ## Local contract
 
-`python scripts/run_spike.py` passes 15 tests.
+`PYTHONPATH=src python -m unittest discover -s tests -v` passes 22 tests.
 
 Demonstrated locally:
 
@@ -45,17 +45,31 @@ Compiled integration evidence (2026-07-31):
   identifier, preserving the platform-neutral certificate meaning.
 - A regression test asserts that the compiled source contract never derives
   invocation identity from `github.run_id`.
+- Live adapter discovery established the exact `gh-aw` envelope: the top level
+  contains `items` plus an empty `errors` array, and each custom item includes
+  `invocation`. The adapter accepts only that strict shape, rejects non-empty
+  errors and unknown fields, and requires the item invocation to equal the
+  certificate's signed scope.
+
+Credentialed GitHub evidence (2026-07-31):
+
+- The OpenAI/Codex workflow, threat-detection stage, Safe Outputs processing,
+  and permission-controlled `portable_binding` job all completed successfully
+  in [Actions run 30645628467](https://github.com/mdgart/portable-binding-spike/actions/runs/30645628467).
+- The protected job verified the Ed25519 certificate, signed invocation scope,
+  and exact canonical action before issuing the GitHub request.
+- GitHub Actions created [issue #3](https://github.com/mdgart/portable-binding-spike/issues/3)
+  with the certificate-bound title `Portable binding live test (Codex verified)`
+  and body `Created by the portable-binding spike through GitHub Agentic
+  Workflows using Codex.`
+- One intermediate run emitted a safe `noop` after the model misclassified the
+  signed dispatch as prompt injection. A clean retry passed threat detection;
+  no detection policy was disabled or weakened.
 
 Not yet demonstrated live:
 
 - A running Faramesh daemon permitting the fixture and invoking the governed
   callable.
-- A credentialed GitHub Agentic Workflow creating the bound issue.
-
-GitHub only dispatches a `workflow_dispatch` workflow after the compiled file
-exists on the default branch. The credentialed run therefore begins after the
-draft PR is reviewed and merged; the spike does not change the default branch
-or bypass that platform boundary.
 
 The local suite may prove the portable binding contract and catch adapter
 regressions, but it cannot by itself establish that the public platforms expose
@@ -63,7 +77,6 @@ the required production hook without modification.
 
 ## Current judgment
 
-The binding design has not failed. No certificate-semantic fork or
-gateway-specific rule has been required. The result remains provisional until
-the two credentialed platform runs complete or the 2026-08-06 hard stop is
-reached.
+The GitHub leg passes without a certificate-semantic fork or gateway-specific
+certificate rule. The result remains provisional until the credentialed
+Faramesh run completes or the 2026-08-06 hard stop is reached.
