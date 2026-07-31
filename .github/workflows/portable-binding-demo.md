@@ -17,6 +17,7 @@ on:
 permissions:
   contents: read
   actions: read
+engine: codex
 imports:
   - shared/portable-binding.md
 ---
