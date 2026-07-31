@@ -43,7 +43,7 @@ The caller's mutable envelope is never used after verification.
 Requires Python 3.11+ and `cryptography`.
 
 ```bash
-python -m unittest discover -s tests -v
+PYTHONPATH=src python -m unittest discover -s tests -v
 python scripts/run_spike.py
 ```
 
