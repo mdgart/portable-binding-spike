@@ -82,6 +82,7 @@ class BindingTestCase(unittest.TestCase):
                 "items": [
                     {
                         "type": "portable_binding",
+                        "invocation": certificate.scope["invocation"],
                         "action_json": json.dumps(
                             {
                                 "namespace": action.namespace,
@@ -294,6 +295,27 @@ class BindingTestCase(unittest.TestCase):
         document = json.loads(self.safe_output())
         document["unbound"] = "must not be ignored"
         with self.assertRaisesRegex(ContractError, "unexpected fields"):
+            GitHubSafeOutputsAdapter.reconstruct(json.dumps(document).encode())
+
+    def test_safe_output_rejects_unknown_item_fields(self) -> None:
+        document = json.loads(self.safe_output())
+        document["items"][0]["unbound"] = "must not be ignored"
+        with self.assertRaisesRegex(ContractError, "unexpected fields"):
+            GitHubSafeOutputsAdapter.reconstruct(json.dumps(document).encode())
+
+    def test_safe_output_rejects_nonstring_invocation(self) -> None:
+        document = json.loads(self.safe_output())
+        document["items"][0]["invocation"] = 123
+        with self.assertRaisesRegex(ContractError, "must be a string"):
+            GitHubSafeOutputsAdapter.reconstruct(json.dumps(document).encode())
+
+    def test_safe_output_rejects_unsigned_invocation_substitution(self) -> None:
+        document = json.loads(self.safe_output())
+        document["items"][0]["invocation"] = "attacker-chosen-invocation"
+        with self.assertRaisesRegex(
+            ContractError,
+            "does not match signed certificate scope",
+        ):
             GitHubSafeOutputsAdapter.reconstruct(json.dumps(document).encode())
 
     def test_safe_output_rejects_malformed_or_nonempty_errors(self) -> None:
